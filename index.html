@@ -1,1512 +1,494 @@
 <!DOCTYPE html>
 <html lang="th">
-
 <head>
-
-  <base target="_top">
-
-  <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
-
-  <title>ระบบจัดการลิงก์</title>
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ระบบรวบรวมและจัดการลิ้งก์ (Link Directory)</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <script>
-
-    tailwind.config = {
-
-      theme: {
-
-        extend: {
-
-          fontFamily: {
-
-            sans: [
-              'Noto Sans Thai',
-              'Arial',
-              'sans-serif'
-            ]
-
-          }
-
-        }
-
-      }
-
-    }
-
-  </script>
-
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
+    body { font-family: 'Prompt', sans-serif; }
+  </style>
 </head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
 
+  <!-- Navigation Bar -->
+  <nav class="bg-white border-b border-slate-200 sticky top-0 z-40">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16 items-center">
+        <div class="flex items-center space-x-3 cursor-pointer" onclick="navigate('public')">
+          <div class="bg-blue-600 p-2 rounded-xl text-white shadow-sm">
+            <i data-lucide="link-2" class="w-6 h-6"></i>
+          </div>
+          <span class="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            LinkHub
+          </span>
+        </div>
+        <div class="flex items-center space-x-3" id="nav-actions">
+          <button id="nav-admin-btn" onclick="openAdmin()" class="px-4 py-2 text-sm font-medium text-slate-600 hover:text-blue-600 hover:bg-slate-100 rounded-lg transition-all flex items-center gap-2">
+            <i data-lucide="shield" class="w-4 h-4"></i> แอดมิน
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
 
-<body class="bg-gray-100 text-gray-800">
+  <!-- Main Container -->
+  <main class="flex-grow max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-
-<!-- =================================================
-     PUBLIC PAGE
-================================================= -->
-
-<div id="publicPage">
-
-  <!-- Header -->
-
-  <header class="bg-blue-700 text-white shadow">
-
-    <div class="
-      max-w-6xl
-      mx-auto
-      px-4
-      py-6
-      flex
-      justify-between
-      items-center
-    ">
-
-      <div>
-
-        <h1 class="text-2xl font-bold">
-          ระบบจัดการลิงก์
+    <!-- Section: Public View -->
+    <div id="view-public" class="space-y-6">
+      <div class="text-center max-w-2xl mx-auto py-8">
+        <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight sm:text-4xl mb-3">
+          คลังรวบรวมลิ้งก์และทรัพยากร
         </h1>
-
-        <p class="text-blue-100 text-sm">
-          URL Shortener / Link Directory
+        <p class="text-slate-500 text-sm sm:text-base">
+          ค้นหาและเข้าถึงเว็บไซต์หรือเอกสารสำคัญได้ง่าย ๆ ในที่เดียว
         </p>
 
+        <!-- Search Bar -->
+        <div class="mt-6 relative max-w-lg mx-auto">
+          <i data-lucide="search" class="w-5 h-5 text-slate-400 absolute left-4 top-3.5"></i>
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="ค้นหาชื่อลิ้งก์ หรือ คีย์เวิร์ด..."
+            class="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm"
+            oninput="filterLinks()"
+          />
+        </div>
       </div>
 
-      <button
-        onclick="showLogin()"
-        class="
-          bg-white
-          text-blue-700
-          px-4
-          py-2
-          rounded-lg
-          hover:bg-blue-50
-        "
-      >
-        Admin
-      </button>
-
+      <!-- Links Grid -->
+      <div id="links-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <!-- Card items will be inserted here dynamically -->
+      </div>
+      <div id="public-loader" class="text-center py-12">
+        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <p class="text-xs text-slate-400 mt-2">กำลังโหลดข้อมูลลิ้งก์...</p>
+      </div>
     </div>
 
-  </header>
+    <!-- Section: Admin Login -->
+    <div id="view-login" class="hidden max-w-md mx-auto py-12">
+      <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
+        <div class="text-center mb-6">
+          <div class="inline-flex p-3 rounded-full bg-blue-50 text-blue-600 mb-2">
+            <i data-lucide="lock" class="w-6 h-6"></i>
+          </div>
+          <h2 class="text-2xl font-bold text-slate-900">เข้าสู่ระบบจัดการ</h2>
+          <p class="text-xs text-slate-500 mt-1">สำหรับผู้ดูแลระบบเท่านั้น</p>
+        </div>
 
-
-  <!-- Main -->
-
-  <main class="max-w-6xl mx-auto px-4 py-8">
-
-
-    <!-- Search -->
-
-    <div class="mb-8">
-
-      <input
-        id="searchInput"
-        type="text"
-        placeholder="ค้นหาชื่อลิงก์..."
-        oninput="filterLinks()"
-        class="
-          w-full
-          px-5
-          py-4
-          rounded-xl
-          border
-          border-gray-300
-          shadow-sm
-          focus:ring-2
-          focus:ring-blue-500
-          focus:outline-none
-        "
-      >
-
+        <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Username</label>
+            <input type="text" id="adminUser" required class="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Password</label>
+            <input type="password" id="adminPass" required class="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+          </div>
+          <p id="loginError" class="text-xs text-red-500 hidden"></p>
+          <button type="submit" id="loginSubmitBtn" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm transition-all flex justify-center items-center gap-2">
+            เข้าสู่ระบบ
+          </button>
+        </form>
+      </div>
     </div>
 
+    <!-- Section: Admin Panel & Dashboard -->
+    <div id="view-admin" class="hidden space-y-6">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <div>
+          <h2 class="text-2xl font-bold text-slate-900">Admin Dashboard</h2>
+          <p class="text-xs text-slate-500">จัดการข้อมูลลิ้งก์และตรวจสอบสถิติการใช้งาน</p>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="openModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium flex items-center gap-2 transition-all">
+            <i data-lucide="plus" class="w-4 h-4"></i> เพิ่มลิ้งก์ใหม่
+          </button>
+          <button onclick="handleLogout()" class="px-3 py-2 text-slate-600 hover:text-red-600 border border-slate-200 rounded-lg text-sm flex items-center gap-1">
+            <i data-lucide="log-out" class="w-4 h-4"></i> ออก
+          </button>
+        </div>
+      </div>
 
-    <!-- Link Count -->
+      <!-- Stats Metric Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+          <div class="p-3 bg-blue-50 rounded-xl text-blue-600"><i data-lucide="layers" class="w-6 h-6"></i></div>
+          <div>
+            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">จำนวนลิ้งก์ทั้งหมด</p>
+            <h3 id="statTotalLinks" class="text-2xl font-bold text-slate-800">0</h3>
+          </div>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+          <div class="p-3 bg-emerald-50 rounded-xl text-emerald-600"><i data-lucide="mouse-pointer-click" class="w-6 h-6"></i></div>
+          <div>
+            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">คลิกสะสมทั้งหมด</p>
+            <h3 id="statTotalClicks" class="text-2xl font-bold text-slate-800">0</h3>
+          </div>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+          <div class="p-3 bg-purple-50 rounded-xl text-purple-600"><i data-lucide="flame" class="w-6 h-6"></i></div>
+          <div>
+            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">ลิ้งก์ยอดนิยมสูงสุด</p>
+            <h3 id="statTopLink" class="text-sm font-bold text-slate-800 truncate max-w-[180px]">-</h3>
+          </div>
+        </div>
+      </div>
 
-    <div class="mb-4 flex justify-between">
-
-      <h2 class="text-xl font-bold">
-        รายการลิงก์
-      </h2>
-
-      <span
-        id="linkCount"
-        class="text-gray-500"
-      >
-        0 รายการ
-      </span>
-
+      <!-- Admin Data Table -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-4 border-b border-slate-100 flex justify-between items-center">
+          <h3 class="font-bold text-slate-800 text-sm">รายการลิ้งก์ในระบบ</h3>
+          <button onclick="fetchAdminData()" class="text-xs text-blue-600 hover:underline flex items-center gap-1">
+            <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i> รีเฟรชข้อมูล
+          </button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-100 text-xs">
+              <tr>
+                <th class="py-3 px-4">ชื่อลิ้งก์ (Title)</th>
+                <th class="py-3 px-4">ปลายทาง (Target URL)</th>
+                <th class="py-3 px-4">Short Code</th>
+                <th class="py-3 px-4 text-center">ยอดคลิก</th>
+                <th class="py-3 px-4">วันที่สร้าง</th>
+                <th class="py-3 px-4 text-right">จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="adminTableBody" class="divide-y divide-slate-100">
+              <!-- Admin table rows dynamically inserted -->
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
-
-
-    <!-- Link List -->
-
-    <div
-      id="publicLinks"
-      class="
-        grid
-        grid-cols-1
-        md:grid-cols-2
-        lg:grid-cols-3
-        gap-5
-      "
-    ></div>
-
-
-    <!-- Loading -->
-
-    <div
-      id="publicLoading"
-      class="text-center py-12 text-gray-500"
-    >
-
-      กำลังโหลดข้อมูล...
-
-    </div>
-
-
   </main>
 
-</div>
-
-
-
-<!-- =================================================
-     LOGIN PAGE
-================================================= -->
-
-<div
-  id="loginPage"
-  class="hidden min-h-screen flex items-center justify-center px-4"
->
-
-  <div
-    class="
-      bg-white
-      rounded-2xl
-      shadow-xl
-      p-8
-      w-full
-      max-w-md
-    "
-  >
-
-    <div class="text-center mb-8">
-
-      <h1 class="text-2xl font-bold">
-        Admin Login
-      </h1>
-
-      <p class="text-gray-500 mt-2">
-        เข้าสู่ระบบผู้ดูแล
-      </p>
-
+  <!-- Modal: Add/Edit Link -->
+  <div id="linkModal" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100">
+      <div class="flex justify-between items-center mb-4">
+        <h3 id="modalTitle" class="text-lg font-bold text-slate-900">เพิ่มลิ้งก์ใหม่</h3>
+        <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <form id="linkForm" onsubmit="handleSaveLink(event)" class="space-y-4">
+        <input type="hidden" id="linkId" />
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">ชื่อเรียก / คำอธิบาย (Title)</label>
+          <input type="text" id="formTitle" required placeholder="เช่น เว็บไซต์หลักสูตร" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">URL ปลายทาง (Original URL)</label>
+          <input type="url" id="formOriginalUrl" required placeholder="https://example.com/..." class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Short Code (รหัสย่อ ไม่บังคับ)</label>
+          <input type="text" id="formShortCode" placeholder="my-custom-link" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+        </div>
+        <div class="flex justify-end gap-2 mt-6">
+          <button type="button" onclick="closeModal()" class="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg text-sm hover:bg-slate-50">ยกเลิก</button>
+          <button type="submit" id="saveLinkBtn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-all">บันทึกข้อมูล</button>
+        </div>
+      </form>
     </div>
-
-
-    <div class="space-y-4">
-
-      <input
-        id="username"
-        type="text"
-        placeholder="Username"
-        class="
-          w-full
-          px-4
-          py-3
-          border
-          rounded-lg
-        "
-      >
-
-
-      <input
-        id="password"
-        type="password"
-        placeholder="Password"
-        class="
-          w-full
-          px-4
-          py-3
-          border
-          rounded-lg
-        "
-      >
-
-
-      <button
-        onclick="login()"
-        class="
-          w-full
-          bg-blue-600
-          text-white
-          py-3
-          rounded-lg
-          font-semibold
-          hover:bg-blue-700
-        "
-      >
-        เข้าสู่ระบบ
-      </button>
-
-
-      <button
-        onclick="showPublicPage()"
-        class="
-          w-full
-          border
-          border-gray-300
-          py-3
-          rounded-lg
-        "
-      >
-        กลับหน้าหลัก
-      </button>
-
-    </div>
-
-
-    <div
-      id="loginMessage"
-      class="mt-4 text-center"
-    ></div>
-
   </div>
 
-</div>
-
-
-
-<!-- =================================================
-     ADMIN PANEL
-================================================= -->
-
-<div
-  id="adminPage"
-  class="hidden min-h-screen bg-gray-100"
->
-
-
-  <!-- Admin Header -->
-
-  <header class="bg-gray-900 text-white">
-
-    <div
-      class="
-        max-w-7xl
-        mx-auto
-        px-4
-        py-5
-        flex
-        justify-between
-        items-center
-      "
-    >
-
-      <div>
-
-        <h1 class="text-xl font-bold">
-          Link Management
-        </h1>
-
-        <p
-          id="adminUsername"
-          class="text-gray-400 text-sm"
-        ></p>
-
-      </div>
-
-
-      <div class="flex gap-2">
-
-        <button
-          onclick="showPublicPage()"
-          class="
-            px-4
-            py-2
-            rounded-lg
-            bg-gray-700
-          "
-        >
-          Public
-        </button>
-
-        <button
-          onclick="logout()"
-          class="
-            px-4
-            py-2
-            rounded-lg
-            bg-red-600
-          "
-        >
-          Logout
-        </button>
-
-      </div>
-
-    </div>
-
-  </header>
-
-
-  <main class="max-w-7xl mx-auto px-4 py-8">
-
-
-    <!-- Statistics -->
-
-    <div
-      class="
-        grid
-        grid-cols-1
-        md:grid-cols-3
-        gap-5
-        mb-8
-      "
-    >
-
-      <div class="bg-white p-6 rounded-xl shadow">
-
-        <p class="text-gray-500">
-          จำนวนลิงก์ทั้งหมด
-        </p>
-
-        <p
-          id="totalLinks"
-          class="text-3xl font-bold mt-2"
-        >
-          0
-        </p>
-
-      </div>
-
-
-      <div class="bg-white p-6 rounded-xl shadow">
-
-        <p class="text-gray-500">
-          จำนวนคลิกทั้งหมด
-        </p>
-
-        <p
-          id="totalClicks"
-          class="text-3xl font-bold mt-2"
-        >
-          0
-        </p>
-
-      </div>
-
-
-      <div class="bg-white p-6 rounded-xl shadow">
-
-        <p class="text-gray-500">
-          คลิกเฉลี่ย / ลิงก์
-        </p>
-
-        <p
-          id="averageClicks"
-          class="text-3xl font-bold mt-2"
-        >
-          0
-        </p>
-
-      </div>
-
-    </div>
-
-
-
-    <!-- Form -->
-
-    <div class="bg-white rounded-xl shadow p-6 mb-8">
-
-      <div class="flex justify-between items-center mb-6">
-
-        <h2
-          id="formTitle"
-          class="text-xl font-bold"
-        >
-          เพิ่มลิงก์
-        </h2>
-
-        <button
-          onclick="resetForm()"
-          class="
-            text-gray-500
-            hover:text-gray-800
-          "
-        >
-          + สร้างใหม่
-        </button>
-
-      </div>
-
-
-      <input
-        type="hidden"
-        id="linkId"
-      >
-
-
-      <div
-        class="
-          grid
-          grid-cols-1
-          md:grid-cols-2
-          gap-4
-        "
-      >
-
-        <div>
-
-          <label class="block mb-2 font-medium">
-            ชื่อลิงก์
-          </label>
-
-          <input
-            id="linkTitle"
-            type="text"
-            placeholder="เช่น เว็บไซต์มหาวิทยาลัย"
-            class="
-              w-full
-              px-4
-              py-3
-              border
-              rounded-lg
-            "
-          >
-
-        </div>
-
-
-        <div>
-
-          <label class="block mb-2 font-medium">
-            Short Code
-          </label>
-
-          <input
-            id="shortCode"
-            type="text"
-            placeholder="เช่น msu01"
-            class="
-              w-full
-              px-4
-              py-3
-              border
-              rounded-lg
-            "
-          >
-
-        </div>
-
-
-        <div class="md:col-span-2">
-
-          <label class="block mb-2 font-medium">
-            URL ปลายทาง
-          </label>
-
-          <input
-            id="originalUrl"
-            type="url"
-            placeholder="https://example.com"
-            class="
-              w-full
-              px-4
-              py-3
-              border
-              rounded-lg
-            "
-          >
-
-        </div>
-
-      </div>
-
-
-      <div class="mt-5">
-
-        <button
-          onclick="saveLink()"
-          class="
-            bg-blue-600
-            text-white
-            px-6
-            py-3
-            rounded-lg
-            hover:bg-blue-700
-          "
-        >
-          บันทึกข้อมูล
-        </button>
-
-      </div>
-
-
-      <div
-        id="formMessage"
-        class="mt-4"
-      ></div>
-
-    </div>
-
-
-
-    <!-- Links Table -->
-
-    <div class="bg-white rounded-xl shadow overflow-hidden">
-
-      <div class="p-6 border-b">
-
-        <h2 class="text-xl font-bold">
-          จัดการรายการลิงก์
-        </h2>
-
-      </div>
-
-
-      <div class="overflow-x-auto">
-
-        <table class="w-full">
-
-          <thead class="bg-gray-50">
-
-            <tr>
-
-              <th class="px-4 py-3 text-left">
-                ชื่อลิงก์
-              </th>
-
-              <th class="px-4 py-3 text-left">
-                Short Code
-              </th>
-
-              <th class="px-4 py-3 text-left">
-                Clicks
-              </th>
-
-              <th class="px-4 py-3 text-left">
-                Created
-              </th>
-
-              <th class="px-4 py-3 text-right">
-                Action
-              </th>
-
-            </tr>
-
-          </thead>
-
-
-          <tbody
-            id="adminLinksTable"
-            class="divide-y"
-          ></tbody>
-
-        </table>
-
-      </div>
-
-    </div>
-
-  </main>
-
-</div>
-
-
-
-<!-- =================================================
-     JAVASCRIPT
-================================================= -->
-
-<script>
-
-
-/* ================================================
-   GLOBAL VARIABLES
-================================================ */
-
-let allLinks = [];
-
-let sessionToken =
-  localStorage.getItem('urlShortenerToken') || '';
-
-
-
-/* ================================================
-   INITIALIZE
-================================================ */
-
-document.addEventListener(
-  'DOMContentLoaded',
-  function() {
-
-    if (sessionToken) {
-
-      google.script.run
-        .withSuccessHandler(function(result) {
-
-          if (result.success) {
-
-            showAdminPage(
-              result.username,
-              result.role
-            );
-
-          } else {
-
-            sessionToken = '';
-
-            localStorage.removeItem(
-              'urlShortenerToken'
-            );
-
-            loadPublicLinks();
-          }
-
-        })
-        .withFailureHandler(function() {
-
-          loadPublicLinks();
-
-        })
-        .getCurrentUser(sessionToken);
-
-    } else {
-
-      loadPublicLinks();
-
-    }
-
-  }
-);
-
-
-
-/* ================================================
-   PUBLIC PAGE
-================================================ */
-
-function loadPublicLinks() {
-
-  document
-    .getElementById('publicLoading')
-    .classList.remove('hidden');
-
-  google.script.run
-    .withSuccessHandler(function(links) {
-
-      allLinks = links || [];
-
-      renderPublicLinks(allLinks);
-
-      document
-        .getElementById('publicLoading')
-        .classList.add('hidden');
-
-    })
-    .withFailureHandler(function(error) {
-
-      document
-        .getElementById('publicLoading')
-        .innerText =
-          'เกิดข้อผิดพลาด: ' + error.message;
-
-    })
-    .getPublicLinks();
-
-}
-
-
-
-function renderPublicLinks(links) {
-
-  const container =
-    document.getElementById('publicLinks');
-
-  container.innerHTML = '';
-
-  document
-    .getElementById('linkCount')
-    .innerText =
-      links.length + ' รายการ';
-
-
-  if (!links.length) {
-
-    container.innerHTML = `
-      <div class="
-        col-span-full
-        text-center
-        py-12
-        text-gray-500
-      ">
-        ไม่พบรายการลิงก์
-      </div>
-    `;
-
-    return;
-  }
-
-
-  links.forEach(function(link) {
-
-    const card = document.createElement('div');
-
-    card.className = `
-      bg-white
-      rounded-xl
-      shadow-sm
-      hover:shadow-lg
-      transition
-      p-6
-      border
-      border-gray-100
-    `;
-
-
-    card.innerHTML = `
-
-      <div class="mb-4">
-
-        <h3 class="
-          text-lg
-          font-bold
-          text-gray-800
-          mb-2
-        ">
-          ${escapeHtml(link.title)}
-        </h3>
-
-        <p class="
-          text-sm
-          text-gray-500
-        ">
-          /${escapeHtml(link.shortCode)}
-        </p>
-
-      </div>
-
-
-      <div class="
-        flex
-        justify-between
-        text-sm
-        text-gray-500
-        mb-4
-      ">
-
-        <span>
-          ${Number(link.clickCount || 0)}
-          clicks
-        </span>
-
-        <span>
-          ${escapeHtml(link.createdDate)}
-        </span>
-
-      </div>
-
-
-      <button
-        onclick="openShortLink('${escapeJs(link.shortCode)}')"
-        class="
-          block
-          w-full
-          text-center
-          bg-blue-600
-          hover:bg-blue-700
-          text-white
-          py-3
-          rounded-lg
-          font-medium
-        "
-      >
-        เปิดลิงก์
-      </button>
-
-    `;
-
-
-    container.appendChild(card);
-
-  });
-
-}
-
-
-
-function filterLinks() {
-
-  const keyword =
-    document
-      .getElementById('searchInput')
-      .value
-      .toLowerCase()
-      .trim();
-
-
-  const filtered =
-    allLinks.filter(function(link) {
-
-      return (
-        link.title
-          .toLowerCase()
-          .includes(keyword) ||
-
-        link.shortCode
-          .toLowerCase()
-          .includes(keyword)
-      );
-
+  <script>
+    // ** 1. กำหนด Web App Deployment URL จาก Apps Script **
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxbJbKH4WetpESjzgILh89c3hiyzWgDXU_5U7w6yhAHyLYYlk5iAZ92gkim1QlziwY3/exec";
+
+    let linksData = [];
+    let currentAdmin = JSON.parse(localStorage.getItem("adminUser") || "null");
+
+    // Initialize UI
+    window.addEventListener("DOMContentLoaded", () => {
+      lucide.createIcons();
+      fetchPublicLinks();
+      updateNavState();
     });
 
+    // Navigation Switcher
+    function navigate(view) {
+      document.getElementById("view-public").classList.toggle("hidden", view !== "public");
+      document.getElementById("view-login").classList.toggle("hidden", view !== "login");
+      document.getElementById("view-admin").classList.toggle("hidden", view !== "admin");
 
-  renderPublicLinks(filtered);
+      if (view === "admin") {
+        fetchAdminData();
+      } else if (view === "public") {
+        fetchPublicLinks();
+      }
+      lucide.createIcons();
+    }
 
-}
-
-
-
-/* ================================================
-   OPEN SHORT LINK
-================================================ */
-
-function openShortLink(shortCode) {
-
-  // URL ของ Web App ปัจจุบัน
-  const webAppUrl =
-    window.location.href.split('?')[0];
-
-  const redirectUrl =
-    webAppUrl +
-    '?r=' +
-    encodeURIComponent(shortCode);
-
-  window.open(
-    redirectUrl,
-    '_blank'
-  );
-
-}
-
-
-
-/* ================================================
-   LOGIN
-================================================ */
-
-function showLogin() {
-
-  document
-    .getElementById('publicPage')
-    .classList.add('hidden');
-
-  document
-    .getElementById('adminPage')
-    .classList.add('hidden');
-
-  document
-    .getElementById('loginPage')
-    .classList.remove('hidden');
-
-}
-
-
-
-function login() {
-
-  const username =
-    document
-      .getElementById('username')
-      .value
-      .trim();
-
-
-  const password =
-    document
-      .getElementById('password')
-      .value;
-
-
-  const message =
-    document.getElementById('loginMessage');
-
-
-  message.innerHTML =
-    '<span class="text-gray-500">กำลังเข้าสู่ระบบ...</span>';
-
-
-  google.script.run
-
-    .withSuccessHandler(function(result) {
-
-      if (result.success) {
-
-        sessionToken = result.token;
-
-        localStorage.setItem(
-          'urlShortenerToken',
-          sessionToken
-        );
-
-
-        showAdminPage(
-          result.username,
-          result.role
-        );
-
-
+    function openAdmin() {
+      if (currentAdmin) {
+        navigate("admin");
       } else {
+        navigate("login");
+      }
+    }
 
-        message.innerHTML =
-          `<span class="text-red-600">
-            ${escapeHtml(result.message)}
-          </span>`;
+    function updateNavState() {
+      const navBtn = document.getElementById("nav-admin-btn");
+      if (currentAdmin) {
+        navBtn.innerHTML = `<i data-lucide="layout-dashboard" class="w-4 h-4"></i> จัดการระบบ (${currentAdmin.username})`;
+      } else {
+        navBtn.innerHTML = `<i data-lucide="shield" class="w-4 h-4"></i> แอดมิน`;
+      }
+      lucide.createIcons();
+    }
 
+    // Generic API Call (Apps Script POST)
+    async function callApi(action, payload = {}) {
+      const response = await fetch(SCRIPT_URL, {
+        method: "POST",
+        // ใช้ text/plain เพื่อป้องกัน CORS preflight OPTIONS request
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: action, ...payload })
+      });
+      return await response.json();
+    }
+
+    // ---------------- Public Functions ---------------- //
+
+    async function fetchPublicLinks() {
+      const loader = document.getElementById("public-loader");
+      loader.classList.remove("hidden");
+      try {
+        const res = await callApi("getPublicLinks");
+        if (res.status === "success") {
+          linksData = res.data;
+          renderPublicCards(linksData);
+        }
+      } catch (err) {
+        console.error("Error fetching links:", err);
+      } finally {
+        loader.classList.add("hidden");
+      }
+    }
+
+    function renderPublicCards(items) {
+      const container = document.getElementById("links-container");
+      container.innerHTML = "";
+
+      if (items.length === 0) {
+        container.innerHTML = `<div class="col-span-full text-center py-8 text-slate-400 text-sm">ไม่พบรายการลิ้งก์ที่ค้นหา</div>`;
+        return;
       }
 
-    })
+      items.forEach(link => {
+        const card = document.createElement("div");
+        card.className = "bg-white p-5 rounded-2xl border border-slate-200 hover:border-blue-400 hover:shadow-md transition-all flex flex-col justify-between group";
+        card.innerHTML = `
+          <div>
+            <div class="flex items-start justify-between gap-3">
+              <h3 class="font-bold text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-1">${escapeHtml(link.title)}</h3>
+              <span class="text-[10px] uppercase font-semibold bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">${escapeHtml(link.short_code || "")}</span>
+            </div>
+            <p class="text-xs text-slate-400 mt-1 truncate">${escapeHtml(link.original_url)}</p>
+          </div>
+          <div class="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between">
+            <span class="text-xs text-slate-400 flex items-center gap-1">
+              <i data-lucide="mouse-pointer" class="w-3.5 h-3.5"></i> ${link.click_count} คลิก
+            </span>
+            <button onclick="handleLinkClick('${link.id}', '${encodeURIComponent(link.original_url)}')" class="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700 bg-blue-50 px-3 py-1.5 rounded-lg group-hover:bg-blue-600 group-hover:text-white transition-all">
+              เปิดลิ้งก์ <i data-lucide="external-link" class="w-3 h-3"></i>
+            </button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+      lucide.createIcons();
+    }
 
-    .withFailureHandler(function(error) {
-
-      message.innerHTML =
-        `<span class="text-red-600">
-          ${escapeHtml(error.message)}
-        </span>`;
-
-    })
-
-    .login(
-      username,
-      password
-    );
-
-}
-
-
-
-/* ================================================
-   ADMIN PAGE
-================================================ */
-
-function showAdminPage(
-  username,
-  role
-) {
-
-  document
-    .getElementById('publicPage')
-    .classList.add('hidden');
-
-  document
-    .getElementById('loginPage')
-    .classList.add('hidden');
-
-  document
-    .getElementById('adminPage')
-    .classList.remove('hidden');
-
-
-  document
-    .getElementById('adminUsername')
-    .innerText =
-      username + ' (' + role + ')';
-
-
-  loadAdminLinks();
-
-  loadStatistics();
-
-}
-
-
-
-function showPublicPage() {
-
-  document
-    .getElementById('loginPage')
-    .classList.add('hidden');
-
-  document
-    .getElementById('adminPage')
-    .classList.add('hidden');
-
-  document
-    .getElementById('publicPage')
-    .classList.remove('hidden');
-
-
-  loadPublicLinks();
-
-}
-
-
-
-/* ================================================
-   ADMIN LINKS
-================================================ */
-
-function loadAdminLinks() {
-
-  google.script.run
-
-    .withSuccessHandler(function(links) {
-
-      renderAdminTable(
-        links || []
+    function filterLinks() {
+      const q = document.getElementById("searchInput").value.toLowerCase();
+      const filtered = linksData.filter(l => 
+        l.title.toLowerCase().includes(q) || 
+        l.original_url.toLowerCase().includes(q) ||
+        (l.short_code && l.short_code.toLowerCase().includes(q))
       );
-
-    })
-
-    .withFailureHandler(handleServerError)
-
-    .getAdminLinks(sessionToken);
-
-}
-
-
-
-function renderAdminTable(links) {
-
-  const tbody =
-    document.getElementById(
-      'adminLinksTable'
-    );
-
-
-  tbody.innerHTML = '';
-
-
-  links.forEach(function(link) {
-
-    const tr =
-      document.createElement('tr');
-
-
-    tr.innerHTML = `
-
-      <td class="px-4 py-4">
-
-        <div class="font-medium">
-          ${escapeHtml(link.title)}
-        </div>
-
-        <div class="
-          text-xs
-          text-gray-500
-          truncate
-          max-w-xs
-        ">
-          ${escapeHtml(link.originalUrl)}
-        </div>
-
-      </td>
-
-
-      <td class="px-4 py-4">
-
-        <span class="
-          bg-gray-100
-          px-3
-          py-1
-          rounded
-          text-sm
-        ">
-          ${escapeHtml(link.shortCode)}
-        </span>
-
-      </td>
-
-
-      <td class="px-4 py-4 font-semibold">
-
-        ${Number(link.clickCount || 0)}
-
-      </td>
-
-
-      <td class="
-        px-4
-        py-4
-        text-sm
-        text-gray-500
-      ">
-
-        ${escapeHtml(link.createdDate)}
-
-      </td>
-
-
-      <td class="
-        px-4
-        py-4
-        text-right
-        whitespace-nowrap
-      ">
-
-        <button
-          onclick='editLink(${JSON.stringify(link)})'
-          class="
-            text-blue-600
-            mr-3
-          "
-        >
-          แก้ไข
-        </button>
-
-
-        <button
-          onclick="deleteLink('${escapeJs(link.id)}')"
-          class="text-red-600"
-        >
-          ลบ
-        </button>
-
-      </td>
-
-    `;
-
-
-    tbody.appendChild(tr);
-
-  });
-
-}
-
-
-
-/* ================================================
-   SAVE LINK
-================================================ */
-
-function saveLink() {
-
-  const data = {
-
-    id:
-      document
-        .getElementById('linkId')
-        .value
-        .trim(),
-
-    title:
-      document
-        .getElementById('linkTitle')
-        .value
-        .trim(),
-
-    originalUrl:
-      document
-        .getElementById('originalUrl')
-        .value
-        .trim(),
-
-    shortCode:
-      document
-        .getElementById('shortCode')
-        .value
-        .trim()
-
-  };
-
-
-  const message =
-    document.getElementById(
-      'formMessage'
-    );
-
-
-  message.innerHTML =
-    '<span class="text-gray-500">กำลังบันทึก...</span>';
-
-
-  google.script.run
-
-    .withSuccessHandler(function(result) {
-
-      message.innerHTML =
-        `<span class="text-green-600">
-          ${escapeHtml(result.message)}
-        </span>`;
-
-
-      resetForm();
-
-      loadAdminLinks();
-
-      loadStatistics();
-
-    })
-
-    .withFailureHandler(function(error) {
-
-      message.innerHTML =
-        `<span class="text-red-600">
-          ${escapeHtml(error.message)}
-        </span>`;
-
-    })
-
-    .saveLink(
-      sessionToken,
-      data
-    );
-
-}
-
-
-
-/* ================================================
-   EDIT LINK
-================================================ */
-
-function editLink(link) {
-
-  document
-    .getElementById('linkId')
-    .value = link.id;
-
-
-  document
-    .getElementById('linkTitle')
-    .value = link.title;
-
-
-  document
-    .getElementById('originalUrl')
-    .value = link.originalUrl;
-
-
-  document
-    .getElementById('shortCode')
-    .value = link.shortCode;
-
-
-  document
-    .getElementById('formTitle')
-    .innerText = 'แก้ไขลิงก์';
-
-
-  window.scrollTo({
-    top: 0,
-    behavior: 'smooth'
-  });
-
-}
-
-
-
-/* ================================================
-   RESET FORM
-================================================ */
-
-function resetForm() {
-
-  document
-    .getElementById('linkId')
-    .value = '';
-
-
-  document
-    .getElementById('linkTitle')
-    .value = '';
-
-
-  document
-    .getElementById('originalUrl')
-    .value = '';
-
-
-  document
-    .getElementById('shortCode')
-    .value = '';
-
-
-  document
-    .getElementById('formTitle')
-    .innerText =
-      'เพิ่มลิงก์';
-
-}
-
-
-
-/* ================================================
-   DELETE LINK
-================================================ */
-
-function deleteLink(id) {
-
-  if (!confirm(
-    'คุณต้องการลบลิงก์นี้ใช่หรือไม่?'
-  )) {
-    return;
-  }
-
-
-  google.script.run
-
-    .withSuccessHandler(function(result) {
-
-      alert(result.message);
-
-      loadAdminLinks();
-
-      loadStatistics();
-
-    })
-
-    .withFailureHandler(handleServerError)
-
-    .deleteLink(
-      sessionToken,
-      id
-    );
-
-}
-
-
-
-/* ================================================
-   STATISTICS
-================================================ */
-
-function loadStatistics() {
-
-  google.script.run
-
-    .withSuccessHandler(function(stats) {
-
-      document
-        .getElementById('totalLinks')
-        .innerText =
-          stats.totalLinks;
-
-
-      document
-        .getElementById('totalClicks')
-        .innerText =
-          stats.totalClicks;
-
-
-      document
-        .getElementById('averageClicks')
-        .innerText =
-          stats.averageClicks;
-
-    })
-
-    .withFailureHandler(handleServerError)
-
-    .getStatistics(
-      sessionToken
-    );
-
-}
-
-
-
-/* ================================================
-   LOGOUT
-================================================ */
-
-function logout() {
-
-  google.script.run
-    .withSuccessHandler(function() {
-
-      sessionToken = '';
-
-      localStorage.removeItem(
-        'urlShortenerToken'
+      renderPublicCards(filtered);
+    }
+
+    // Real-time Click Tracking & Redirect
+    async function handleLinkClick(id, encodedUrl) {
+      const targetUrl = decodeURIComponent(encodedUrl);
+      
+      // ส่งคำขอนับคลิกไปที่ Apps Script ทันที (Background execution)
+      callApi("trackClick", { id: id }).catch(e => console.warn("Track failed", e));
+
+      // Redirect ไปยังหน้าปลายทาง
+      window.open(targetUrl, "_blank", "noopener,noreferrer");
+    }
+
+    // ---------------- Admin Functions ---------------- //
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const u = document.getElementById("adminUser").value;
+      const p = document.getElementById("adminPass").value;
+      const btn = document.getElementById("loginSubmitBtn");
+      const errEl = document.getElementById("loginError");
+
+      btn.innerText = "กำลังตรวจสอบ...";
+      btn.disabled = true;
+      errEl.classList.add("hidden");
+
+      try {
+        const res = await callApi("adminLogin", { username: u, password: p });
+        if (res.status === "success") {
+          currentAdmin = res.user;
+          localStorage.setItem("adminUser", JSON.stringify(currentAdmin));
+          updateNavState();
+          navigate("admin");
+        } else {
+          errEl.innerText = res.message || "Login failed";
+          errEl.classList.remove("hidden");
+        }
+      } catch (err) {
+        errEl.innerText = "เชื่อมต่อระบบไม่สำเร็จ ลองใหม่อีกครั้ง";
+        errEl.classList.remove("hidden");
+      } finally {
+        btn.innerText = "เข้าสู่ระบบ";
+        btn.disabled = false;
+      }
+    }
+
+    function handleLogout() {
+      localStorage.removeItem("adminUser");
+      currentAdmin = null;
+      updateNavState();
+      navigate("public");
+    }
+
+    async function fetchAdminData() {
+      try {
+        const res = await callApi("getAllLinks");
+        if (res.status === "success") {
+          const links = res.data;
+          renderAdminDashboard(links);
+        }
+      } catch (err) {
+        console.error("Failed to load admin data", err);
+      }
+    }
+
+    function renderAdminDashboard(links) {
+      // 1. Render Metrics
+      const totalLinks = links.length;
+      const totalClicks = links.reduce((acc, curr) => acc + (Number(curr.click_count) || 0), 0);
+      let topLink = "-";
+      if (links.length > 0) {
+        const sorted = [...links].sort((a, b) => b.click_count - a.click_count);
+        topLink = `${sorted[0].title} (${sorted[0].click_count} คลิก)`;
+      }
+
+      document.getElementById("statTotalLinks").innerText = totalLinks;
+      document.getElementById("statTotalClicks").innerText = totalClicks;
+      document.getElementById("statTopLink").innerText = topLink;
+
+      // 2. Render Table Rows
+      const tbody = document.getElementById("adminTableBody");
+      tbody.innerHTML = "";
+
+      if (links.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400">ยังไม่มีข้อมูลลิ้งก์ในระบบ</td></tr>`;
+        return;
+      }
+
+      links.forEach(link => {
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-slate-50/80 transition-colors";
+        tr.innerHTML = `
+          <td class="py-3 px-4 font-medium text-slate-900">${escapeHtml(link.title)}</td>
+          <td class="py-3 px-4 text-slate-500 max-w-xs truncate"><a href="${escapeHtml(link.original_url)}" target="_blank" class="hover:underline">${escapeHtml(link.original_url)}</a></td>
+          <td class="py-3 px-4 font-mono text-xs text-slate-600">${escapeHtml(link.short_code || "-")}</td>
+          <td class="py-3 px-4 text-center font-bold text-blue-600">${link.click_count}</td>
+          <td class="py-3 px-4 text-xs text-slate-400">${escapeHtml(link.created_date || "-")}</td>
+          <td class="py-3 px-4 text-right space-x-1">
+            <button onclick="editLinkModal('${link.id}')" class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-slate-100 rounded-lg"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+            <button onclick="deleteLinkConfirm('${link.id}')" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-slate-100 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+      lucide.createIcons();
+    }
+
+    // Modal Operations
+    function openModal(isEdit = false) {
+      document.getElementById("modalTitle").innerText = isEdit ? "แก้ไขข้อมูลลิ้งก์" : "เพิ่มลิ้งก์ใหม่";
+      document.getElementById("linkModal").classList.remove("hidden");
+    }
+
+    function closeModal() {
+      document.getElementById("linkModal").classList.add("hidden");
+      document.getElementById("linkForm").reset();
+      document.getElementById("linkId").value = "";
+    }
+
+    function editLinkModal(id) {
+      const item = linksData.find(l => l.id === id);
+      if (!item) return;
+      document.getElementById("linkId").value = item.id;
+      document.getElementById("formTitle").value = item.title;
+      document.getElementById("formOriginalUrl").value = item.original_url;
+      document.getElementById("formShortCode").value = item.short_code;
+      openModal(true);
+    }
+
+    async function handleSaveLink(e) {
+      e.preventDefault();
+      const id = document.getElementById("linkId").value;
+      const title = document.getElementById("formTitle").value;
+      const original_url = document.getElementById("formOriginalUrl").value;
+      const short_code = document.getElementById("formShortCode").value;
+      const btn = document.getElementById("saveLinkBtn");
+
+      btn.innerText = "กำลังบันทึก...";
+      btn.disabled = true;
+
+      const payload = { title, original_url, short_code };
+      try {
+        if (id) {
+          await callApi("updateLink", { payload: { id, ...payload } });
+        } else {
+          await callApi("addLink", { payload: payload });
+        }
+        closeModal();
+        await fetchAdminData();
+      } catch (err) {
+        alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล: " + err.message);
+      } finally {
+        btn.innerText = "บันทึกข้อมูล";
+        btn.disabled = false;
+      }
+    }
+
+    async function deleteLinkConfirm(id) {
+      if (!confirm("คุณต้องการลบลิ้งก์นี้ใช่หรือไม่? ข้อมูลสถิติจะถูกลบออกทั้งหมด")) return;
+      try {
+        await callApi("deleteLink", { id: id });
+        await fetchAdminData();
+      } catch (err) {
+        alert("ลบไม่สำเร็จ: " + err.message);
+      }
+    }
+
+    function escapeHtml(str) {
+      return String(str || "").replace(/[&<>'"]/g, 
+        tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
       );
-
-      showPublicPage();
-
-    })
-    .logout(sessionToken);
-
-}
-
-
-
-/* ================================================
-   ERROR HANDLER
-================================================ */
-
-function handleServerError(error) {
-
-  if (
-    error &&
-    error.message === 'SESSION_EXPIRED'
-  ) {
-
-    sessionToken = '';
-
-    localStorage.removeItem(
-      'urlShortenerToken'
-    );
-
-    showLogin();
-
-    alert(
-      'Session หมดอายุ กรุณา Login ใหม่'
-    );
-
-    return;
-  }
-
-
-  alert(
-    'เกิดข้อผิดพลาด: ' +
-    (error.message || error)
-  );
-
-}
-
-
-
-/* ================================================
-   SECURITY / HTML ESCAPE
-================================================ */
-
-function escapeHtml(value) {
-
-  return String(value || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-
-}
-
-
-function escapeJs(value) {
-
-  return String(value || '')
-    .replace(/\\/g, '\\\\')
-    .replace(/'/g, "\\'")
-    .replace(/\n/g, '\\n')
-    .replace(/\r/g, '\\r');
-
-}
-
-
-</script>
-
+    }
+  </script>
 </body>
-
 </html>
