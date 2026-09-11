@@ -1,0 +1,1512 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+
+  <base target="_top">
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>ระบบจัดการลิงก์</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script>
+
+    tailwind.config = {
+
+      theme: {
+
+        extend: {
+
+          fontFamily: {
+
+            sans: [
+              'Noto Sans Thai',
+              'Arial',
+              'sans-serif'
+            ]
+
+          }
+
+        }
+
+      }
+
+    }
+
+  </script>
+
+</head>
+
+
+<body class="bg-gray-100 text-gray-800">
+
+
+<!-- =================================================
+     PUBLIC PAGE
+================================================= -->
+
+<div id="publicPage">
+
+  <!-- Header -->
+
+  <header class="bg-blue-700 text-white shadow">
+
+    <div class="
+      max-w-6xl
+      mx-auto
+      px-4
+      py-6
+      flex
+      justify-between
+      items-center
+    ">
+
+      <div>
+
+        <h1 class="text-2xl font-bold">
+          ระบบจัดการลิงก์
+        </h1>
+
+        <p class="text-blue-100 text-sm">
+          URL Shortener / Link Directory
+        </p>
+
+      </div>
+
+      <button
+        onclick="showLogin()"
+        class="
+          bg-white
+          text-blue-700
+          px-4
+          py-2
+          rounded-lg
+          hover:bg-blue-50
+        "
+      >
+        Admin
+      </button>
+
+    </div>
+
+  </header>
+
+
+  <!-- Main -->
+
+  <main class="max-w-6xl mx-auto px-4 py-8">
+
+
+    <!-- Search -->
+
+    <div class="mb-8">
+
+      <input
+        id="searchInput"
+        type="text"
+        placeholder="ค้นหาชื่อลิงก์..."
+        oninput="filterLinks()"
+        class="
+          w-full
+          px-5
+          py-4
+          rounded-xl
+          border
+          border-gray-300
+          shadow-sm
+          focus:ring-2
+          focus:ring-blue-500
+          focus:outline-none
+        "
+      >
+
+    </div>
+
+
+    <!-- Link Count -->
+
+    <div class="mb-4 flex justify-between">
+
+      <h2 class="text-xl font-bold">
+        รายการลิงก์
+      </h2>
+
+      <span
+        id="linkCount"
+        class="text-gray-500"
+      >
+        0 รายการ
+      </span>
+
+    </div>
+
+
+    <!-- Link List -->
+
+    <div
+      id="publicLinks"
+      class="
+        grid
+        grid-cols-1
+        md:grid-cols-2
+        lg:grid-cols-3
+        gap-5
+      "
+    ></div>
+
+
+    <!-- Loading -->
+
+    <div
+      id="publicLoading"
+      class="text-center py-12 text-gray-500"
+    >
+
+      กำลังโหลดข้อมูล...
+
+    </div>
+
+
+  </main>
+
+</div>
+
+
+
+<!-- =================================================
+     LOGIN PAGE
+================================================= -->
+
+<div
+  id="loginPage"
+  class="hidden min-h-screen flex items-center justify-center px-4"
+>
+
+  <div
+    class="
+      bg-white
+      rounded-2xl
+      shadow-xl
+      p-8
+      w-full
+      max-w-md
+    "
+  >
+
+    <div class="text-center mb-8">
+
+      <h1 class="text-2xl font-bold">
+        Admin Login
+      </h1>
+
+      <p class="text-gray-500 mt-2">
+        เข้าสู่ระบบผู้ดูแล
+      </p>
+
+    </div>
+
+
+    <div class="space-y-4">
+
+      <input
+        id="username"
+        type="text"
+        placeholder="Username"
+        class="
+          w-full
+          px-4
+          py-3
+          border
+          rounded-lg
+        "
+      >
+
+
+      <input
+        id="password"
+        type="password"
+        placeholder="Password"
+        class="
+          w-full
+          px-4
+          py-3
+          border
+          rounded-lg
+        "
+      >
+
+
+      <button
+        onclick="login()"
+        class="
+          w-full
+          bg-blue-600
+          text-white
+          py-3
+          rounded-lg
+          font-semibold
+          hover:bg-blue-700
+        "
+      >
+        เข้าสู่ระบบ
+      </button>
+
+
+      <button
+        onclick="showPublicPage()"
+        class="
+          w-full
+          border
+          border-gray-300
+          py-3
+          rounded-lg
+        "
+      >
+        กลับหน้าหลัก
+      </button>
+
+    </div>
+
+
+    <div
+      id="loginMessage"
+      class="mt-4 text-center"
+    ></div>
+
+  </div>
+
+</div>
+
+
+
+<!-- =================================================
+     ADMIN PANEL
+================================================= -->
+
+<div
+  id="adminPage"
+  class="hidden min-h-screen bg-gray-100"
+>
+
+
+  <!-- Admin Header -->
+
+  <header class="bg-gray-900 text-white">
+
+    <div
+      class="
+        max-w-7xl
+        mx-auto
+        px-4
+        py-5
+        flex
+        justify-between
+        items-center
+      "
+    >
+
+      <div>
+
+        <h1 class="text-xl font-bold">
+          Link Management
+        </h1>
+
+        <p
+          id="adminUsername"
+          class="text-gray-400 text-sm"
+        ></p>
+
+      </div>
+
+
+      <div class="flex gap-2">
+
+        <button
+          onclick="showPublicPage()"
+          class="
+            px-4
+            py-2
+            rounded-lg
+            bg-gray-700
+          "
+        >
+          Public
+        </button>
+
+        <button
+          onclick="logout()"
+          class="
+            px-4
+            py-2
+            rounded-lg
+            bg-red-600
+          "
+        >
+          Logout
+        </button>
+
+      </div>
+
+    </div>
+
+  </header>
+
+
+  <main class="max-w-7xl mx-auto px-4 py-8">
+
+
+    <!-- Statistics -->
+
+    <div
+      class="
+        grid
+        grid-cols-1
+        md:grid-cols-3
+        gap-5
+        mb-8
+      "
+    >
+
+      <div class="bg-white p-6 rounded-xl shadow">
+
+        <p class="text-gray-500">
+          จำนวนลิงก์ทั้งหมด
+        </p>
+
+        <p
+          id="totalLinks"
+          class="text-3xl font-bold mt-2"
+        >
+          0
+        </p>
+
+      </div>
+
+
+      <div class="bg-white p-6 rounded-xl shadow">
+
+        <p class="text-gray-500">
+          จำนวนคลิกทั้งหมด
+        </p>
+
+        <p
+          id="totalClicks"
+          class="text-3xl font-bold mt-2"
+        >
+          0
+        </p>
+
+      </div>
+
+
+      <div class="bg-white p-6 rounded-xl shadow">
+
+        <p class="text-gray-500">
+          คลิกเฉลี่ย / ลิงก์
+        </p>
+
+        <p
+          id="averageClicks"
+          class="text-3xl font-bold mt-2"
+        >
+          0
+        </p>
+
+      </div>
+
+    </div>
+
+
+
+    <!-- Form -->
+
+    <div class="bg-white rounded-xl shadow p-6 mb-8">
+
+      <div class="flex justify-between items-center mb-6">
+
+        <h2
+          id="formTitle"
+          class="text-xl font-bold"
+        >
+          เพิ่มลิงก์
+        </h2>
+
+        <button
+          onclick="resetForm()"
+          class="
+            text-gray-500
+            hover:text-gray-800
+          "
+        >
+          + สร้างใหม่
+        </button>
+
+      </div>
+
+
+      <input
+        type="hidden"
+        id="linkId"
+      >
+
+
+      <div
+        class="
+          grid
+          grid-cols-1
+          md:grid-cols-2
+          gap-4
+        "
+      >
+
+        <div>
+
+          <label class="block mb-2 font-medium">
+            ชื่อลิงก์
+          </label>
+
+          <input
+            id="linkTitle"
+            type="text"
+            placeholder="เช่น เว็บไซต์มหาวิทยาลัย"
+            class="
+              w-full
+              px-4
+              py-3
+              border
+              rounded-lg
+            "
+          >
+
+        </div>
+
+
+        <div>
+
+          <label class="block mb-2 font-medium">
+            Short Code
+          </label>
+
+          <input
+            id="shortCode"
+            type="text"
+            placeholder="เช่น msu01"
+            class="
+              w-full
+              px-4
+              py-3
+              border
+              rounded-lg
+            "
+          >
+
+        </div>
+
+
+        <div class="md:col-span-2">
+
+          <label class="block mb-2 font-medium">
+            URL ปลายทาง
+          </label>
+
+          <input
+            id="originalUrl"
+            type="url"
+            placeholder="https://example.com"
+            class="
+              w-full
+              px-4
+              py-3
+              border
+              rounded-lg
+            "
+          >
+
+        </div>
+
+      </div>
+
+
+      <div class="mt-5">
+
+        <button
+          onclick="saveLink()"
+          class="
+            bg-blue-600
+            text-white
+            px-6
+            py-3
+            rounded-lg
+            hover:bg-blue-700
+          "
+        >
+          บันทึกข้อมูล
+        </button>
+
+      </div>
+
+
+      <div
+        id="formMessage"
+        class="mt-4"
+      ></div>
+
+    </div>
+
+
+
+    <!-- Links Table -->
+
+    <div class="bg-white rounded-xl shadow overflow-hidden">
+
+      <div class="p-6 border-b">
+
+        <h2 class="text-xl font-bold">
+          จัดการรายการลิงก์
+        </h2>
+
+      </div>
+
+
+      <div class="overflow-x-auto">
+
+        <table class="w-full">
+
+          <thead class="bg-gray-50">
+
+            <tr>
+
+              <th class="px-4 py-3 text-left">
+                ชื่อลิงก์
+              </th>
+
+              <th class="px-4 py-3 text-left">
+                Short Code
+              </th>
+
+              <th class="px-4 py-3 text-left">
+                Clicks
+              </th>
+
+              <th class="px-4 py-3 text-left">
+                Created
+              </th>
+
+              <th class="px-4 py-3 text-right">
+                Action
+              </th>
+
+            </tr>
+
+          </thead>
+
+
+          <tbody
+            id="adminLinksTable"
+            class="divide-y"
+          ></tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+  </main>
+
+</div>
+
+
+
+<!-- =================================================
+     JAVASCRIPT
+================================================= -->
+
+<script>
+
+
+/* ================================================
+   GLOBAL VARIABLES
+================================================ */
+
+let allLinks = [];
+
+let sessionToken =
+  localStorage.getItem('urlShortenerToken') || '';
+
+
+
+/* ================================================
+   INITIALIZE
+================================================ */
+
+document.addEventListener(
+  'DOMContentLoaded',
+  function() {
+
+    if (sessionToken) {
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+
+          if (result.success) {
+
+            showAdminPage(
+              result.username,
+              result.role
+            );
+
+          } else {
+
+            sessionToken = '';
+
+            localStorage.removeItem(
+              'urlShortenerToken'
+            );
+
+            loadPublicLinks();
+          }
+
+        })
+        .withFailureHandler(function() {
+
+          loadPublicLinks();
+
+        })
+        .getCurrentUser(sessionToken);
+
+    } else {
+
+      loadPublicLinks();
+
+    }
+
+  }
+);
+
+
+
+/* ================================================
+   PUBLIC PAGE
+================================================ */
+
+function loadPublicLinks() {
+
+  document
+    .getElementById('publicLoading')
+    .classList.remove('hidden');
+
+  google.script.run
+    .withSuccessHandler(function(links) {
+
+      allLinks = links || [];
+
+      renderPublicLinks(allLinks);
+
+      document
+        .getElementById('publicLoading')
+        .classList.add('hidden');
+
+    })
+    .withFailureHandler(function(error) {
+
+      document
+        .getElementById('publicLoading')
+        .innerText =
+          'เกิดข้อผิดพลาด: ' + error.message;
+
+    })
+    .getPublicLinks();
+
+}
+
+
+
+function renderPublicLinks(links) {
+
+  const container =
+    document.getElementById('publicLinks');
+
+  container.innerHTML = '';
+
+  document
+    .getElementById('linkCount')
+    .innerText =
+      links.length + ' รายการ';
+
+
+  if (!links.length) {
+
+    container.innerHTML = `
+      <div class="
+        col-span-full
+        text-center
+        py-12
+        text-gray-500
+      ">
+        ไม่พบรายการลิงก์
+      </div>
+    `;
+
+    return;
+  }
+
+
+  links.forEach(function(link) {
+
+    const card = document.createElement('div');
+
+    card.className = `
+      bg-white
+      rounded-xl
+      shadow-sm
+      hover:shadow-lg
+      transition
+      p-6
+      border
+      border-gray-100
+    `;
+
+
+    card.innerHTML = `
+
+      <div class="mb-4">
+
+        <h3 class="
+          text-lg
+          font-bold
+          text-gray-800
+          mb-2
+        ">
+          ${escapeHtml(link.title)}
+        </h3>
+
+        <p class="
+          text-sm
+          text-gray-500
+        ">
+          /${escapeHtml(link.shortCode)}
+        </p>
+
+      </div>
+
+
+      <div class="
+        flex
+        justify-between
+        text-sm
+        text-gray-500
+        mb-4
+      ">
+
+        <span>
+          ${Number(link.clickCount || 0)}
+          clicks
+        </span>
+
+        <span>
+          ${escapeHtml(link.createdDate)}
+        </span>
+
+      </div>
+
+
+      <button
+        onclick="openShortLink('${escapeJs(link.shortCode)}')"
+        class="
+          block
+          w-full
+          text-center
+          bg-blue-600
+          hover:bg-blue-700
+          text-white
+          py-3
+          rounded-lg
+          font-medium
+        "
+      >
+        เปิดลิงก์
+      </button>
+
+    `;
+
+
+    container.appendChild(card);
+
+  });
+
+}
+
+
+
+function filterLinks() {
+
+  const keyword =
+    document
+      .getElementById('searchInput')
+      .value
+      .toLowerCase()
+      .trim();
+
+
+  const filtered =
+    allLinks.filter(function(link) {
+
+      return (
+        link.title
+          .toLowerCase()
+          .includes(keyword) ||
+
+        link.shortCode
+          .toLowerCase()
+          .includes(keyword)
+      );
+
+    });
+
+
+  renderPublicLinks(filtered);
+
+}
+
+
+
+/* ================================================
+   OPEN SHORT LINK
+================================================ */
+
+function openShortLink(shortCode) {
+
+  // URL ของ Web App ปัจจุบัน
+  const webAppUrl =
+    window.location.href.split('?')[0];
+
+  const redirectUrl =
+    webAppUrl +
+    '?r=' +
+    encodeURIComponent(shortCode);
+
+  window.open(
+    redirectUrl,
+    '_blank'
+  );
+
+}
+
+
+
+/* ================================================
+   LOGIN
+================================================ */
+
+function showLogin() {
+
+  document
+    .getElementById('publicPage')
+    .classList.add('hidden');
+
+  document
+    .getElementById('adminPage')
+    .classList.add('hidden');
+
+  document
+    .getElementById('loginPage')
+    .classList.remove('hidden');
+
+}
+
+
+
+function login() {
+
+  const username =
+    document
+      .getElementById('username')
+      .value
+      .trim();
+
+
+  const password =
+    document
+      .getElementById('password')
+      .value;
+
+
+  const message =
+    document.getElementById('loginMessage');
+
+
+  message.innerHTML =
+    '<span class="text-gray-500">กำลังเข้าสู่ระบบ...</span>';
+
+
+  google.script.run
+
+    .withSuccessHandler(function(result) {
+
+      if (result.success) {
+
+        sessionToken = result.token;
+
+        localStorage.setItem(
+          'urlShortenerToken',
+          sessionToken
+        );
+
+
+        showAdminPage(
+          result.username,
+          result.role
+        );
+
+
+      } else {
+
+        message.innerHTML =
+          `<span class="text-red-600">
+            ${escapeHtml(result.message)}
+          </span>`;
+
+      }
+
+    })
+
+    .withFailureHandler(function(error) {
+
+      message.innerHTML =
+        `<span class="text-red-600">
+          ${escapeHtml(error.message)}
+        </span>`;
+
+    })
+
+    .login(
+      username,
+      password
+    );
+
+}
+
+
+
+/* ================================================
+   ADMIN PAGE
+================================================ */
+
+function showAdminPage(
+  username,
+  role
+) {
+
+  document
+    .getElementById('publicPage')
+    .classList.add('hidden');
+
+  document
+    .getElementById('loginPage')
+    .classList.add('hidden');
+
+  document
+    .getElementById('adminPage')
+    .classList.remove('hidden');
+
+
+  document
+    .getElementById('adminUsername')
+    .innerText =
+      username + ' (' + role + ')';
+
+
+  loadAdminLinks();
+
+  loadStatistics();
+
+}
+
+
+
+function showPublicPage() {
+
+  document
+    .getElementById('loginPage')
+    .classList.add('hidden');
+
+  document
+    .getElementById('adminPage')
+    .classList.add('hidden');
+
+  document
+    .getElementById('publicPage')
+    .classList.remove('hidden');
+
+
+  loadPublicLinks();
+
+}
+
+
+
+/* ================================================
+   ADMIN LINKS
+================================================ */
+
+function loadAdminLinks() {
+
+  google.script.run
+
+    .withSuccessHandler(function(links) {
+
+      renderAdminTable(
+        links || []
+      );
+
+    })
+
+    .withFailureHandler(handleServerError)
+
+    .getAdminLinks(sessionToken);
+
+}
+
+
+
+function renderAdminTable(links) {
+
+  const tbody =
+    document.getElementById(
+      'adminLinksTable'
+    );
+
+
+  tbody.innerHTML = '';
+
+
+  links.forEach(function(link) {
+
+    const tr =
+      document.createElement('tr');
+
+
+    tr.innerHTML = `
+
+      <td class="px-4 py-4">
+
+        <div class="font-medium">
+          ${escapeHtml(link.title)}
+        </div>
+
+        <div class="
+          text-xs
+          text-gray-500
+          truncate
+          max-w-xs
+        ">
+          ${escapeHtml(link.originalUrl)}
+        </div>
+
+      </td>
+
+
+      <td class="px-4 py-4">
+
+        <span class="
+          bg-gray-100
+          px-3
+          py-1
+          rounded
+          text-sm
+        ">
+          ${escapeHtml(link.shortCode)}
+        </span>
+
+      </td>
+
+
+      <td class="px-4 py-4 font-semibold">
+
+        ${Number(link.clickCount || 0)}
+
+      </td>
+
+
+      <td class="
+        px-4
+        py-4
+        text-sm
+        text-gray-500
+      ">
+
+        ${escapeHtml(link.createdDate)}
+
+      </td>
+
+
+      <td class="
+        px-4
+        py-4
+        text-right
+        whitespace-nowrap
+      ">
+
+        <button
+          onclick='editLink(${JSON.stringify(link)})'
+          class="
+            text-blue-600
+            mr-3
+          "
+        >
+          แก้ไข
+        </button>
+
+
+        <button
+          onclick="deleteLink('${escapeJs(link.id)}')"
+          class="text-red-600"
+        >
+          ลบ
+        </button>
+
+      </td>
+
+    `;
+
+
+    tbody.appendChild(tr);
+
+  });
+
+}
+
+
+
+/* ================================================
+   SAVE LINK
+================================================ */
+
+function saveLink() {
+
+  const data = {
+
+    id:
+      document
+        .getElementById('linkId')
+        .value
+        .trim(),
+
+    title:
+      document
+        .getElementById('linkTitle')
+        .value
+        .trim(),
+
+    originalUrl:
+      document
+        .getElementById('originalUrl')
+        .value
+        .trim(),
+
+    shortCode:
+      document
+        .getElementById('shortCode')
+        .value
+        .trim()
+
+  };
+
+
+  const message =
+    document.getElementById(
+      'formMessage'
+    );
+
+
+  message.innerHTML =
+    '<span class="text-gray-500">กำลังบันทึก...</span>';
+
+
+  google.script.run
+
+    .withSuccessHandler(function(result) {
+
+      message.innerHTML =
+        `<span class="text-green-600">
+          ${escapeHtml(result.message)}
+        </span>`;
+
+
+      resetForm();
+
+      loadAdminLinks();
+
+      loadStatistics();
+
+    })
+
+    .withFailureHandler(function(error) {
+
+      message.innerHTML =
+        `<span class="text-red-600">
+          ${escapeHtml(error.message)}
+        </span>`;
+
+    })
+
+    .saveLink(
+      sessionToken,
+      data
+    );
+
+}
+
+
+
+/* ================================================
+   EDIT LINK
+================================================ */
+
+function editLink(link) {
+
+  document
+    .getElementById('linkId')
+    .value = link.id;
+
+
+  document
+    .getElementById('linkTitle')
+    .value = link.title;
+
+
+  document
+    .getElementById('originalUrl')
+    .value = link.originalUrl;
+
+
+  document
+    .getElementById('shortCode')
+    .value = link.shortCode;
+
+
+  document
+    .getElementById('formTitle')
+    .innerText = 'แก้ไขลิงก์';
+
+
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
+
+}
+
+
+
+/* ================================================
+   RESET FORM
+================================================ */
+
+function resetForm() {
+
+  document
+    .getElementById('linkId')
+    .value = '';
+
+
+  document
+    .getElementById('linkTitle')
+    .value = '';
+
+
+  document
+    .getElementById('originalUrl')
+    .value = '';
+
+
+  document
+    .getElementById('shortCode')
+    .value = '';
+
+
+  document
+    .getElementById('formTitle')
+    .innerText =
+      'เพิ่มลิงก์';
+
+}
+
+
+
+/* ================================================
+   DELETE LINK
+================================================ */
+
+function deleteLink(id) {
+
+  if (!confirm(
+    'คุณต้องการลบลิงก์นี้ใช่หรือไม่?'
+  )) {
+    return;
+  }
+
+
+  google.script.run
+
+    .withSuccessHandler(function(result) {
+
+      alert(result.message);
+
+      loadAdminLinks();
+
+      loadStatistics();
+
+    })
+
+    .withFailureHandler(handleServerError)
+
+    .deleteLink(
+      sessionToken,
+      id
+    );
+
+}
+
+
+
+/* ================================================
+   STATISTICS
+================================================ */
+
+function loadStatistics() {
+
+  google.script.run
+
+    .withSuccessHandler(function(stats) {
+
+      document
+        .getElementById('totalLinks')
+        .innerText =
+          stats.totalLinks;
+
+
+      document
+        .getElementById('totalClicks')
+        .innerText =
+          stats.totalClicks;
+
+
+      document
+        .getElementById('averageClicks')
+        .innerText =
+          stats.averageClicks;
+
+    })
+
+    .withFailureHandler(handleServerError)
+
+    .getStatistics(
+      sessionToken
+    );
+
+}
+
+
+
+/* ================================================
+   LOGOUT
+================================================ */
+
+function logout() {
+
+  google.script.run
+    .withSuccessHandler(function() {
+
+      sessionToken = '';
+
+      localStorage.removeItem(
+        'urlShortenerToken'
+      );
+
+      showPublicPage();
+
+    })
+    .logout(sessionToken);
+
+}
+
+
+
+/* ================================================
+   ERROR HANDLER
+================================================ */
+
+function handleServerError(error) {
+
+  if (
+    error &&
+    error.message === 'SESSION_EXPIRED'
+  ) {
+
+    sessionToken = '';
+
+    localStorage.removeItem(
+      'urlShortenerToken'
+    );
+
+    showLogin();
+
+    alert(
+      'Session หมดอายุ กรุณา Login ใหม่'
+    );
+
+    return;
+  }
+
+
+  alert(
+    'เกิดข้อผิดพลาด: ' +
+    (error.message || error)
+  );
+
+}
+
+
+
+/* ================================================
+   SECURITY / HTML ESCAPE
+================================================ */
+
+function escapeHtml(value) {
+
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+
+}
+
+
+function escapeJs(value) {
+
+  return String(value || '')
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/\n/g, '\\n')
+    .replace(/\r/g, '\\r');
+
+}
+
+
+</script>
+
+</body>
+
+</html>
